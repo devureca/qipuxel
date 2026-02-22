@@ -63,6 +63,7 @@ export interface Review {
     text: string
     visible: boolean
     createdAt: Date
+    date?: string
 }
 
 // ── Reservas (Plan Premium) ──────────────────────────────
