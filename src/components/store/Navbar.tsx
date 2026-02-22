@@ -66,7 +66,7 @@ export default function Navbar({
                 font-sans text-xs font-medium tracking-widest uppercase
                 border-b-2 pb-1 transition-all duration-200
                 ${activeCategory === cat.slug
-                                    ? 'border-[var(--color-primary)]'
+                                    ? 'border-[--color-primary]'
                                     : 'border-transparent opacity-70 hover:opacity-100'
                                 }
                 ${darkMode ? 'text-white' : 'text-black'}
