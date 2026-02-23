@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Navbar from '@/components/store/Navbar'
 import HeroSlider from '@/components/store/HeroSlider'
 import ProductsGrid from '@/components/store/ProductsGrid'
+import FeaturedSlider from '@/components/store/FeaturedSlider'
 import Reviews from '@/components/store/Reviews'
 import Footer from '@/components/store/Footer'
 import WhatsAppButton from '@/components/store/WhatsAppButton'
@@ -54,18 +55,13 @@ export default function StorePage() {
             />
 
             {/* Destacados - solo aparece si hay productos con tag "featured" */}
-            <ProductsGrid
+            <FeaturedSlider
                 products={mockProducts}
-                categories={mockCategories}
                 config={mockConfig}
                 darkMode={darkMode}
-                activeCategory={null}
-                setActiveCategory={setActiveCategory}
                 title="Destacados"
                 label="Lo mejor de la tienda"
                 filterTag="featured"
-                showFilters={false}
-                limit={8}
             />
 
             {/* Catálogo completo con filtros */}

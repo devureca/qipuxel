@@ -89,7 +89,7 @@ export const mockProducts: Product[] = [
         complete: true,
         region: null,
         status: 'available',
-        tags: ['new'],
+        tags: ['new', 'featured'],
         createdAt: new Date('2026-01-22'),
     },
     {
@@ -104,7 +104,7 @@ export const mockProducts: Product[] = [
         complete: true,
         region: 'NTSC',
         status: 'available',
-        tags: ['offer'],
+        tags: ['offer', 'featured'],
         createdAt: new Date('2026-01-10'),
     },
     {
