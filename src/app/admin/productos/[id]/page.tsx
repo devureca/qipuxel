@@ -1,24 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { mockProducts } from '@/lib/mockData'
-import type { Product } from '@/types'
+import { getProduct, createProduct, updateProduct, deleteProduct } from '@/lib/firestore'
+import { getCategories } from '@/lib/firestore'
+import type { Product, Category } from '@/types'
 
 const CONSOLES = ['Nintendo 64', 'PlayStation', 'PlayStation 2', 'PlayStation 3', 'PlayStation 4', 'PlayStation 5', 'Xbox', 'Xbox 360', 'Xbox One', 'Nintendo Switch', 'Game Boy', 'SNES', 'Sega', 'PC', 'Otro']
 
-const EMPTY_PRODUCT: Omit<Product, 'id' | 'createdAt'> = {
+const EMPTY_PRODUCT = {
     name: '',
     price: 0,
     description: '',
-    images: [],
+    images: [] as string[],
     categoryId: '',
     console: '',
-    condition: 'good',
+    condition: 'good' as const,
     complete: false,
     region: '',
-    status: 'available',
-    tags: [],
+    status: 'available' as const,
+    tags: [] as string[],
 }
 
 export default function ProductoFormPage() {
@@ -26,25 +27,85 @@ export default function ProductoFormPage() {
     const params = useParams()
     const isNew = params.id === 'nuevo'
 
-    const existing = isNew ? null : mockProducts.find(p => p.id === params.id)
-    const [form, setForm] = useState(existing ?? { ...EMPTY_PRODUCT })
+    const [form, setForm] = useState(EMPTY_PRODUCT)
+    const [categories, setCategories] = useState<Category[]>([])
+    const [loading, setLoading] = useState(!isNew)
     const [saving, setSaving] = useState(false)
+    const [deleting, setDeleting] = useState(false)
+
+    useEffect(() => {
+        fetchCategories()
+        if (!isNew) fetchProduct()
+    }, [])
+
+    async function fetchCategories() {
+        try {
+            const data = await getCategories()
+            setCategories(data as Category[])
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
+    async function fetchProduct() {
+        try {
+            const data = await getProduct(params.id as string)
+            if (data) setForm(data as unknown as typeof EMPTY_PRODUCT)
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     function update(key: string, value: unknown) {
         setForm(prev => ({ ...prev, [key]: value }))
     }
 
     function toggleTag(tag: string) {
-        const tags = (form.tags ?? []) as string[]
+        const tags = form.tags ?? []
         update('tags', tags.includes(tag) ? tags.filter(t => t !== tag) : [...tags, tag])
     }
 
     async function handleSave() {
+        if (!form.name || !form.price) return alert('Nombre y precio son obligatorios')
         setSaving(true)
-        // Por ahora solo simula guardado, después conectamos Firebase
-        await new Promise(r => setTimeout(r, 800))
-        setSaving(false)
-        router.push('/admin/productos')
+        try {
+            if (isNew) {
+                await createProduct(form)
+            } else {
+                await updateProduct(params.id as string, form)
+            }
+            router.push('/admin/productos')
+        } catch (err) {
+            console.error(err)
+            alert('Error al guardar el producto')
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    async function handleDelete() {
+        if (!confirm('¿Eliminar este producto? Esta acción no se puede deshacer.')) return
+        setDeleting(true)
+        try {
+            await deleteProduct(params.id as string)
+            router.push('/admin/productos')
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setDeleting(false)
+        }
+    }
+
+    if (loading) {
+        return (
+            <div style={{ textAlign: 'center', padding: '3rem' }}>
+                <p style={{ fontFamily: 'var(--font-dm-sans)', color: 'rgba(255,255,255,0.25)' }}>
+                    Cargando producto...
+                </p>
+            </div>
+        )
     }
 
     return (
@@ -78,26 +139,14 @@ export default function ProductoFormPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-                {/* Nombre */}
                 <Field label="NOMBRE">
-                    <Input
-                        value={form.name}
-                        onChange={v => update('name', v)}
-                        placeholder="Ej: Super Mario Bros"
-                    />
+                    <Input value={form.name} onChange={v => update('name', v)} placeholder="Ej: Super Mario Bros" />
                 </Field>
 
-                {/* Precio */}
                 <Field label="PRECIO">
-                    <Input
-                        type="number"
-                        value={form.price.toString()}
-                        onChange={v => update('price', Number(v))}
-                        placeholder="0"
-                    />
+                    <Input type="number" value={form.price.toString()} onChange={v => update('price', Number(v))} placeholder="0" />
                 </Field>
 
-                {/* Descripción */}
                 <Field label="DESCRIPCIÓN">
                     <textarea
                         value={form.description ?? ''}
@@ -120,52 +169,41 @@ export default function ProductoFormPage() {
                     />
                 </Field>
 
-                {/* Consola */}
                 <Field label="CONSOLA">
                     <select
                         value={form.console ?? ''}
                         onChange={e => update('console', e.target.value)}
-                        style={{
-                            width: '100%',
-                            background: '#141414',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            borderRadius: 8,
-                            padding: '12px 14px',
-                            fontFamily: 'var(--font-dm-sans)',
-                            fontSize: '0.9rem',
-                            color: form.console ? '#fff' : 'rgba(255,255,255,0.3)',
-                            outline: 'none',
-                            cursor: 'pointer',
-                        }}
+                        style={selectStyle}
                     >
                         <option value="">Seleccioná una consola</option>
-                        {CONSOLES.map(c => (
-                            <option key={c} value={c}>{c}</option>
+                        {CONSOLES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                </Field>
+
+                <Field label="CATEGORÍA">
+                    <select
+                        value={form.categoryId ?? ''}
+                        onChange={e => update('categoryId', e.target.value)}
+                        style={selectStyle}
+                    >
+                        <option value="">Sin categoría</option>
+                        {categories.map(cat => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
                         ))}
                     </select>
                 </Field>
 
-                {/* Condición + Estado en fila */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <Field label="CONDICIÓN">
-                        <select
-                            value={form.condition}
-                            onChange={e => update('condition', e.target.value)}
-                            style={selectStyle}
-                        >
+                        <select value={form.condition} onChange={e => update('condition', e.target.value)} style={selectStyle}>
                             <option value="sealed">Sellado</option>
                             <option value="like_new">Como nuevo</option>
                             <option value="good">Buen estado</option>
                             <option value="fair">Con detalles</option>
                         </select>
                     </Field>
-
                     <Field label="ESTADO">
-                        <select
-                            value={form.status}
-                            onChange={e => update('status', e.target.value)}
-                            style={selectStyle}
-                        >
+                        <select value={form.status} onChange={e => update('status', e.target.value)} style={selectStyle}>
                             <option value="available">Disponible</option>
                             <option value="reserved">Reservado</option>
                             <option value="sold">Vendido</option>
@@ -173,7 +211,6 @@ export default function ProductoFormPage() {
                     </Field>
                 </div>
 
-                {/* Completo */}
                 <Field label="COMPLETO (con caja, manual, etc)">
                     <div style={{ display: 'flex', gap: '1rem' }}>
                         {[{ label: 'Sí', value: true }, { label: 'No', value: false }].map(opt => (
@@ -199,11 +236,10 @@ export default function ProductoFormPage() {
                     </div>
                 </Field>
 
-                {/* Tags */}
                 <Field label="ETIQUETAS">
                     <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                         {['offer', 'featured', 'new', 'slider'].map(tag => {
-                            const active = (form.tags as string[]).includes(tag)
+                            const active = form.tags.includes(tag)
                             return (
                                 <button
                                     key={tag}
@@ -232,7 +268,7 @@ export default function ProductoFormPage() {
                     </div>
                 </Field>
 
-                {/* Imágenes - placeholder por ahora */}
+                {/* Imágenes - placeholder hasta conectar Storage */}
                 <Field label="IMÁGENES (máx. 4)">
                     <div style={{
                         border: '2px dashed rgba(255,255,255,0.1)',
@@ -246,14 +282,7 @@ export default function ProductoFormPage() {
                             color: 'rgba(255,255,255,0.3)',
                             marginBottom: '0.5rem',
                         }}>
-                            La subida de imágenes se conectará con Firebase Storage
-                        </p>
-                        <p style={{
-                            fontFamily: 'var(--font-dm-sans)',
-                            fontSize: '0.75rem',
-                            color: 'rgba(255,255,255,0.2)',
-                        }}>
-                            Por ahora usá las URLs del mockData
+                            La subida de imágenes se conectará en el próximo paso
                         </p>
                     </div>
                 </Field>
@@ -283,6 +312,8 @@ export default function ProductoFormPage() {
 
                     {!isNew && (
                         <button
+                            onClick={handleDelete}
+                            disabled={deleting}
                             style={{
                                 padding: '13px 20px',
                                 background: 'none',
@@ -292,19 +323,11 @@ export default function ProductoFormPage() {
                                 fontWeight: 600,
                                 fontSize: '0.9rem',
                                 color: 'rgba(255,80,80,0.7)',
-                                cursor: 'pointer',
+                                cursor: deleting ? 'not-allowed' : 'pointer',
                                 transition: 'all 0.15s',
                             }}
-                            onMouseEnter={e => {
-                                e.currentTarget.style.borderColor = 'rgba(255,0,0,0.6)'
-                                e.currentTarget.style.color = '#ff5050'
-                            }}
-                            onMouseLeave={e => {
-                                e.currentTarget.style.borderColor = 'rgba(255,0,0,0.3)'
-                                e.currentTarget.style.color = 'rgba(255,80,80,0.7)'
-                            }}
                         >
-                            Eliminar
+                            {deleting ? 'Eliminando...' : 'Eliminar'}
                         </button>
                     )}
                 </div>
@@ -313,7 +336,6 @@ export default function ProductoFormPage() {
     )
 }
 
-// Componentes auxiliares
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div>
