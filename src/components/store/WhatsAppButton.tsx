@@ -26,7 +26,7 @@ export default function WhatsAppButton({ config, visible = true }: WhatsAppButto
             href={`https://wa.me/${config.whatsapp}?text=${message}`}
             target="_blank"
             rel="noreferrer"
-            className="fixed bottom-6 left-6 z-100 flex items-center gap-3 transition-all duration-500"
+            className="fixed bottom-6 right-6 z-100 flex items-center gap-3 transition-all duration-500"
             style={{
                 opacity: show ? 1 : 0,
                 transform: show ? 'translateY(0)' : 'translateY(20px)',
