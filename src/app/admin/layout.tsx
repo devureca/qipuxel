@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
+import Sidebar from '@/components/admin/Sidebar'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth()
@@ -40,9 +41,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     if (!user && pathname !== '/admin/login') return null
 
+    const isLogin = pathname === '/admin/login'
+
     return (
         <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#f1f1f1' }}>
-            {children}
+            {!isLogin && <Sidebar />}
+            <main style={{
+                marginLeft: isLogin ? 0 : 240,
+                minHeight: '100vh',
+                padding: isLogin ? 0 : '2rem',
+            }}>
+                {children}
+            </main>
         </div>
     )
 }
