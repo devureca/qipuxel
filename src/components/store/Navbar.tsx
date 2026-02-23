@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Menu, X, Moon, Sun } from 'lucide-react'
 import type { StoreConfig, Category } from '@/types'
 
@@ -21,56 +21,87 @@ export default function Navbar({
     activeCategory,
     setActiveCategory,
 }: NavbarProps) {
-    const [scrolled, setScrolled] = useState(false)
     const [menuOpen, setMenuOpen] = useState(false)
-
-    useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 40)
-        window.addEventListener('scroll', onScroll)
-        return () => window.removeEventListener('scroll', onScroll)
-    }, [])
 
     const visibleCategories = categories
         .filter(cat => cat.visible)
         .sort((a, b) => a.order - b.order)
 
+    const navBg = darkMode ? '#0a0a0a' : '#ffffff'
+    const borderColor = darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+    const textColor = darkMode ? '#f1f1f1' : '#111111'
+
     return (
         <nav
-            className={`
-        fixed top-0 left-0 right-0 z-50 px-[5%] transition-all duration-300
-        ${scrolled
-                    ? darkMode
-                        ? 'bg-black/95 backdrop-blur-md border-b border-white/10'
-                        : 'bg-white/95 backdrop-blur-md border-b border-black/10'
-                    : 'bg-transparent'
-                }
-      `}
+            style={{
+                position: 'sticky',
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: 100,
+                background: navBg,
+                borderBottom: `1px solid ${borderColor}`,
+            }}
         >
-            <div className="max-w-[1280px] mx-auto flex items-center justify-between h-16">
-
+            <div
+                style={{
+                    maxWidth: 1280,
+                    margin: '0 auto',
+                    padding: '0 5%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    height: 64,
+                    position: 'relative',
+                }}
+            >
                 {/* Logo */}
                 <div
-                    className="font-display text-3xl tracking-widest cursor-pointer"
-                    style={{ color: config.primaryColor }}
+                    style={{
+                        fontFamily: 'var(--font-bebas)',
+                        fontSize: '1.6rem',
+                        letterSpacing: '0.1em',
+                        color: textColor,
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                    }}
                 >
                     {config.name}
                 </div>
 
-                {/* Menu desktop */}
-                <div className="hidden md:flex items-center gap-8">
+                {/* Menu desktop - centrado absoluto */}
+                <div
+                    style={{
+                        display: 'none',
+                        position: 'absolute',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        gap: '2.5rem',
+                    }}
+                    className="md:flex! items-center"
+                >
                     {visibleCategories.map(cat => (
                         <button
                             key={cat.id}
                             onClick={() => setActiveCategory(activeCategory === cat.slug ? null : cat.slug)}
-                            className={`
-                font-sans text-xs font-medium tracking-widest uppercase
-                border-b-2 pb-1 transition-all duration-200
-                ${activeCategory === cat.slug
-                                    ? 'border-[--color-primary]'
-                                    : 'border-transparent opacity-70 hover:opacity-100'
-                                }
-                ${darkMode ? 'text-white' : 'text-black'}
-              `}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                borderBottom: `2px solid ${activeCategory === cat.slug ? config.primaryColor : 'transparent'}`,
+                                cursor: 'pointer',
+                                fontFamily: 'var(--font-dm-sans)',
+                                fontSize: '0.82rem',
+                                fontWeight: 500,
+                                letterSpacing: '0.06em',
+                                color: activeCategory === cat.slug ? config.primaryColor : textColor,
+                                opacity: activeCategory === cat.slug ? 1 : 0.75,
+                                transition: 'all 0.2s',
+                                padding: '4px 0',
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                            onMouseLeave={e => {
+                                if (activeCategory !== cat.slug) e.currentTarget.style.opacity = '0.75'
+                            }}
                         >
                             {cat.name}
                         </button>
@@ -78,13 +109,24 @@ export default function Navbar({
                 </div>
 
                 {/* Right side */}
-                <div className="flex items-center gap-4">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     {config.instagram && (
                         <a
                             href={config.instagram}
                             target="_blank"
                             rel="noreferrer"
-                            className={`text-xs font-medium tracking-widest opacity-60 hover:opacity-100 transition-opacity ${darkMode ? 'text-white' : 'text-black'}`}
+                            style={{
+                                fontFamily: 'var(--font-dm-sans)',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                letterSpacing: '0.08em',
+                                color: textColor,
+                                opacity: 0.6,
+                                textDecoration: 'none',
+                                transition: 'opacity 0.2s',
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                            onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}
                         >
                             IG
                         </a>
@@ -94,7 +136,18 @@ export default function Navbar({
                             href={config.facebook}
                             target="_blank"
                             rel="noreferrer"
-                            className={`text-xs font-medium tracking-widest opacity-60 hover:opacity-100 transition-opacity ${darkMode ? 'text-white' : 'text-black'}`}
+                            style={{
+                                fontFamily: 'var(--font-dm-sans)',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                letterSpacing: '0.08em',
+                                color: textColor,
+                                opacity: 0.6,
+                                textDecoration: 'none',
+                                transition: 'opacity 0.2s',
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                            onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}
                         >
                             FB
                         </a>
@@ -103,40 +156,65 @@ export default function Navbar({
                     {/* Dark mode toggle */}
                     <button
                         onClick={() => setDarkMode(!darkMode)}
-                        className={`
-              p-2 rounded-full border transition-all duration-200
-              ${darkMode
-                                ? 'border-white/20 text-white hover:border-white/40'
-                                : 'border-black/20 text-black hover:border-black/40'
-                            }
-            `}
+                        style={{
+                            background: 'none',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: '50%',
+                            width: 36,
+                            height: 36,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            color: textColor,
+                            transition: 'all 0.2s',
+                        }}
                     >
                         {darkMode ? <Sun size={14} /> : <Moon size={14} />}
                     </button>
 
-                    {/* Mobile menu button */}
+                    {/* Mobile hamburger - solo mobile */}
                     <button
                         onClick={() => setMenuOpen(!menuOpen)}
-                        className={`md:hidden p-2 ${darkMode ? 'text-white' : 'text-black'}`}
+                        className="flex md:hidden"
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: textColor,
+                            alignItems: 'center',
+                        }}
                     >
-                        {menuOpen ? <X size={20} /> : <Menu size={20} />}
+                        {menuOpen ? <X size={22} /> : <Menu size={22} />}
                     </button>
                 </div>
             </div>
 
             {/* Mobile menu */}
             {menuOpen && (
-                <div className={`md:hidden border-t ${darkMode ? 'bg-black border-white/10' : 'bg-white border-black/10'}`}>
+                <div
+                    style={{ background: navBg, borderTop: `1px solid ${borderColor}` }}
+                    className="md:hidden"
+                >
                     {visibleCategories.map(cat => (
                         <button
                             key={cat.id}
                             onClick={() => { setActiveCategory(cat.slug); setMenuOpen(false) }}
-                            className={`
-                block w-full text-left px-6 py-4 text-xs font-medium tracking-widest uppercase
-                transition-colors duration-200
-                ${darkMode ? 'text-white hover:bg-white/5' : 'text-black hover:bg-black/5'}
-                ${activeCategory === cat.slug ? 'opacity-100' : 'opacity-60'}
-              `}
+                            style={{
+                                display: 'block',
+                                width: '100%',
+                                textAlign: 'left',
+                                padding: '1rem 5%',
+                                background: 'none',
+                                border: 'none',
+                                borderBottom: `1px solid ${borderColor}`,
+                                cursor: 'pointer',
+                                fontFamily: 'var(--font-dm-sans)',
+                                fontSize: '0.85rem',
+                                fontWeight: 500,
+                                letterSpacing: '0.06em',
+                                color: activeCategory === cat.slug ? config.primaryColor : textColor,
+                            }}
                         >
                             {cat.name}
                         </button>

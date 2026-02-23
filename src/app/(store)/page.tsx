@@ -31,10 +31,12 @@ export default function StorePage() {
                 setActiveCategory={setActiveCategory}
             />
 
-            <HeroSlider
-                slides={mockSliders}
-                config={mockConfig}
-            />
+            <div style={{ padding: '24px 22px 0 24px' }}>
+                <HeroSlider
+                    slides={mockSliders}
+                    config={mockConfig}
+                />
+            </div>
 
             {/* Ofertas - solo aparece si hay productos con tag "offer" */}
             <ProductsGrid
