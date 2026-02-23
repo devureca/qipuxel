@@ -1,4 +1,4 @@
-import type { StoreConfig, Category, Product, SliderBanner, Review } from '@/types'
+import type { StoreConfig, Category, Product, SliderBanner, Review, Brand } from '@/types'
 
 export const mockConfig: StoreConfig = {
     name: 'RETROVERSE',
@@ -206,4 +206,14 @@ export const mockReviews: Review[] = [
         createdAt: new Date('2025-12-15'),
         date: '2025-12-15',
     },
+]
+
+export const mockBrands: Brand[] = [
+    { id: '1', name: 'Nintendo', logo: null },
+    { id: '2', name: 'PlayStation', logo: null },
+    { id: '3', name: 'Xbox', logo: null },
+    { id: '4', name: 'Sega', logo: null },
+    { id: '5', name: 'Atari', logo: null },
+    { id: '6', name: 'Capcom', logo: null },
+    { id: '7', name: 'Konami', logo: null },
 ]

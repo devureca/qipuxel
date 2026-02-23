@@ -6,6 +6,7 @@ import HeroSlider from '@/components/store/HeroSlider'
 import ProductsGrid from '@/components/store/ProductsGrid'
 import FeaturedSlider from '@/components/store/FeaturedSlider'
 import Reviews from '@/components/store/Reviews'
+import BrandsBanner from '@/components/store/BrandsBanner'
 import Footer from '@/components/store/Footer'
 import WhatsAppButton from '@/components/store/WhatsAppButton'
 import {
@@ -14,6 +15,7 @@ import {
     mockProducts,
     mockSliders,
     mockReviews,
+    mockBrands,
 } from '@/lib/mockData'
 
 export default function StorePage() {
@@ -84,6 +86,8 @@ export default function StorePage() {
                 darkMode={darkMode}
                 primaryColor={mockConfig.primaryColor}
             />
+
+            <BrandsBanner brands={mockBrands} darkMode={darkMode} />
 
             <Footer
                 config={mockConfig}

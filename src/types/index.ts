@@ -78,3 +78,10 @@ export interface Reservation {
     notes: string | null
     createdAt: Date
 }
+
+// ── Brand ───────────────────────────────────────────────
+export interface Brand {
+    id: string
+    name: string
+    logo: string | null
+  }
