@@ -64,7 +64,7 @@ export default function StorePage() {
                 filterTag="featured"
             />
 
-            {/* Catálogo completo con filtros */}
+            {/* Catálogo */}
             <ProductsGrid
                 products={mockProducts}
                 categories={mockCategories}
@@ -74,7 +74,9 @@ export default function StorePage() {
                 setActiveCategory={setActiveCategory}
                 title="Catálogo"
                 label="Todo el stock"
-                showFilters={true}
+                showFilters={false}
+                limit={8}
+                showViewAll={true}
             />
 
             <Reviews

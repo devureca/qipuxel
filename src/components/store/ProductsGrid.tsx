@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import type { Product, Category, StoreConfig } from '@/types'
 import ProductCard from './ProductCard'
 import ProductModal from './ProductModal'
@@ -17,6 +18,7 @@ interface ProductsGridProps {
     filterTag?: string
     showFilters?: boolean
     limit?: number
+    showViewAll?: boolean
 }
 
 export default function ProductsGrid({
@@ -29,14 +31,16 @@ export default function ProductsGrid({
     title = 'Productos',
     label = 'Catálogo',
     filterTag,
-    showFilters = true,
+    showFilters = false,
     limit,
+    showViewAll = false,
 }: ProductsGridProps) {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
     const [conditionFilter, setConditionFilter] = useState<string | null>(null)
     const [statusFilter, setStatusFilter] = useState<string | null>(null)
     const titleRef = useRef<HTMLDivElement>(null)
     const [titleInView, setTitleInView] = useState(false)
+    const router = useRouter()
 
     useEffect(() => {
         const obs = new IntersectionObserver(
@@ -50,33 +54,27 @@ export default function ProductsGrid({
     // Filtrar productos
     let filtered = products
 
-    // Por tag específico (ofertas, destacados, nuevos)
     if (filterTag) {
         filtered = filtered.filter(p => p.tags.includes(filterTag as never))
     }
 
-    // Por categoría activa del navbar
     if (activeCategory) {
         const cat = categories.find(c => c.slug === activeCategory)
         if (cat) filtered = filtered.filter(p => p.categoryId === cat.id)
     }
 
-    // Por condición
     if (conditionFilter) {
         filtered = filtered.filter(p => p.condition === conditionFilter)
     }
 
-    // Por estado
     if (statusFilter) {
         filtered = filtered.filter(p => p.status === statusFilter)
     }
 
-    // Límite para secciones destacadas
     if (limit) {
         filtered = filtered.slice(0, limit)
     }
 
-    // Si no hay productos no renderiza nada
     if (!filtered.length && !showFilters) return null
 
     return (
@@ -104,7 +102,6 @@ export default function ProductsGrid({
                         </h2>
                     </div>
 
-                    {/* Resultado count */}
                     <p className="font-sans text-sm hidden md:block" style={{ color: '#888' }}>
                         {filtered.length} {filtered.length === 1 ? 'producto' : 'productos'}
                     </p>
@@ -113,8 +110,6 @@ export default function ProductsGrid({
                 {/* Filters */}
                 {showFilters && (
                     <div className="flex flex-wrap gap-3 mb-10">
-
-                        {/* Condition filter */}
                         {[
                             { value: null, label: 'Todos' },
                             { value: 'sealed', label: 'Sellados' },
@@ -138,11 +133,10 @@ export default function ProductsGrid({
 
                         <div className="w-px mx-1" style={{ background: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
 
-                        {/* Status filter */}
                         {[
-                            { value: null, label: 'Disponibles y vendidos' },
-                            { value: 'available', label: 'Solo disponibles' },
-                            { value: 'sold', label: 'Solo vendidos' },
+                            { value: null, label: 'Todos' },
+                            { value: 'available', label: 'Disponibles' },
+                            { value: 'sold', label: 'Vendidos' },
                         ].map(opt => (
                             <button
                                 key={opt.label}
@@ -192,10 +186,75 @@ export default function ProductsGrid({
                             />
                         </div>
                     ))}
+
+                    {/* Card ver todo el catálogo */}
+                    {showViewAll && (
+                        <div
+                            onClick={() => router.push('/catalogo')}
+                            className="transition-all duration-500"
+                            style={{
+                                opacity: titleInView ? 1 : 0,
+                                transform: titleInView ? 'translateY(0)' : 'translateY(24px)',
+                                transitionDelay: `${Math.min(filtered.length * 60, 400)}ms`,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    borderRadius: 16,
+                                    overflow: 'hidden',
+                                    aspectRatio: '3/4',
+                                    background: config.primaryColor,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.3s, box-shadow 0.3s',
+                                }}
+                                onMouseEnter={e => {
+                                    e.currentTarget.style.transform = 'scale(1.02)'
+                                    e.currentTarget.style.boxShadow = `0 16px 48px ${config.primaryColor}55`
+                                }}
+                                onMouseLeave={e => {
+                                    e.currentTarget.style.transform = 'scale(1)'
+                                    e.currentTarget.style.boxShadow = 'none'
+                                }}
+                            >
+                                <span
+                                    style={{
+                                        fontFamily: 'var(--font-bebas)',
+                                        fontSize: '2.2rem',
+                                        color: '#fff',
+                                        letterSpacing: '0.05em',
+                                        textAlign: 'center',
+                                        padding: '0 1.5rem',
+                                        lineHeight: 1.1,
+                                        marginBottom: '1.5rem',
+                                    }}
+                                >
+                                    VER TODO EL CATÁLOGO
+                                </span>
+                                <div
+                                    style={{
+                                        width: 52,
+                                        height: 52,
+                                        borderRadius: '50%',
+                                        background: 'rgba(255,255,255,0.2)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M5 12h14M12 5l7 7-7 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Modal */}
             <ProductModal
                 product={selectedProduct}
                 config={config}
