@@ -1,39 +1,62 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { SliderBanner } from '@/types'
-import { mockSliders } from '@/lib/mockData'
+import { getSlides, updateSlide, deleteSlide } from '@/lib/firestore'
 
 export default function SliderPage() {
-    const [slides, setSlides] = useState<SliderBanner[]>(mockSliders)
+    const [slides, setSlides] = useState<SliderBanner[]>([])
+    const [loading, setLoading] = useState(true)
 
-    function toggleActive(id: string) {
-        setSlides(prev =>
-            prev.map(s => s.id === id ? { ...s, active: !s.active } : s)
-        )
+    useEffect(() => {
+        fetchSlides()
+    }, [])
+
+    async function fetchSlides() {
+        setLoading(true)
+        try {
+            const data = await getSlides()
+            setSlides(data as SliderBanner[])
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setLoading(false)
+        }
     }
 
-    function moveUp(index: number) {
+    async function toggleActive(slide: SliderBanner) {
+        await updateSlide(slide.id, { active: !slide.active })
+        fetchSlides()
+    }
+
+    async function moveUp(index: number) {
         if (index === 0) return
-        const updated = [...slides]
-            ;[updated[index - 1], updated[index]] = [updated[index], updated[index - 1]]
-        setSlides(updated.map((s, i) => ({ ...s, order: i + 1 })))
+        const a = slides[index - 1]
+        const b = slides[index]
+        await updateSlide(a.id, { order: b.order })
+        await updateSlide(b.id, { order: a.order })
+        fetchSlides()
     }
 
-    function moveDown(index: number) {
+    async function moveDown(index: number) {
         if (index === slides.length - 1) return
-        const updated = [...slides]
-            ;[updated[index], updated[index + 1]] = [updated[index + 1], updated[index]]
-        setSlides(updated.map((s, i) => ({ ...s, order: i + 1 })))
+        const a = slides[index]
+        const b = slides[index + 1]
+        await updateSlide(a.id, { order: b.order })
+        await updateSlide(b.id, { order: a.order })
+        fetchSlides()
     }
 
-    function deleteSlide(id: string) {
-        setSlides(prev => prev.filter(s => s.id !== id))
+    async function handleDelete(id: string) {
+        if (!confirm('¿Eliminar este slide?')) return
+        await deleteSlide(id)
+        fetchSlides()
     }
+
+    const sorted = [...slides].sort((a, b) => a.order - b.order)
 
     return (
         <div style={{ maxWidth: 720 }}>
-            {/* Header */}
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -57,28 +80,26 @@ export default function SliderPage() {
                         {slides.filter(s => s.active).length} slides activos de {slides.length}
                     </p>
                 </div>
-                <button
-                    style={{
-                        background: '#fff',
-                        color: '#111',
-                        border: 'none',
-                        borderRadius: 8,
-                        padding: '10px 20px',
-                        fontFamily: 'var(--font-dm-sans)',
-                        fontWeight: 700,
-                        fontSize: '0.85rem',
-                        cursor: 'pointer',
-                    }}
-                >
-                    + Agregar slide
-                </button>
             </div>
 
-            {/* Slides list */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {slides
-                    .sort((a, b) => a.order - b.order)
-                    .map((slide, i) => (
+            {loading ? (
+                <p style={{ fontFamily: 'var(--font-dm-sans)', color: 'rgba(255,255,255,0.25)', textAlign: 'center', padding: '3rem' }}>
+                    Cargando slides...
+                </p>
+            ) : sorted.length === 0 ? (
+                <div style={{
+                    border: '2px dashed rgba(255,255,255,0.1)',
+                    borderRadius: 12,
+                    padding: '3rem',
+                    textAlign: 'center',
+                }}>
+                    <p style={{ fontFamily: 'var(--font-dm-sans)', color: 'rgba(255,255,255,0.25)', fontSize: '0.9rem' }}>
+                        No hay slides todavía. Agregá imágenes desde Firebase Storage.
+                    </p>
+                </div>
+            ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {sorted.map((slide, i) => (
                         <div
                             key={slide.id}
                             style={{
@@ -94,14 +115,12 @@ export default function SliderPage() {
                                 transition: 'opacity 0.2s',
                             }}
                         >
-                            {/* Preview imagen */}
                             <div style={{
                                 width: 80,
                                 height: 56,
                                 borderRadius: 8,
                                 overflow: 'hidden',
                                 background: '#1a1a1a',
-                                flexShrink: 0,
                             }}>
                                 <img
                                     src={slide.image}
@@ -110,7 +129,6 @@ export default function SliderPage() {
                                 />
                             </div>
 
-                            {/* Info */}
                             <div>
                                 <p style={{
                                     fontFamily: 'var(--font-dm-sans)',
@@ -133,27 +151,12 @@ export default function SliderPage() {
                                 </p>
                             </div>
 
-                            {/* Acciones */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                {/* Mover arriba/abajo */}
-                                <button
-                                    onClick={() => moveUp(i)}
-                                    disabled={i === 0}
-                                    style={arrowBtnStyle(i === 0)}
-                                >
-                                    ↑
-                                </button>
-                                <button
-                                    onClick={() => moveDown(i)}
-                                    disabled={i === slides.length - 1}
-                                    style={arrowBtnStyle(i === slides.length - 1)}
-                                >
-                                    ↓
-                                </button>
+                                <button onClick={() => moveUp(i)} disabled={i === 0} style={arrowBtnStyle(i === 0)}>↑</button>
+                                <button onClick={() => moveDown(i)} disabled={i === sorted.length - 1} style={arrowBtnStyle(i === sorted.length - 1)}>↓</button>
 
-                                {/* Toggle activo */}
                                 <button
-                                    onClick={() => toggleActive(slide.id)}
+                                    onClick={() => toggleActive(slide)}
                                     style={{
                                         padding: '6px 12px',
                                         borderRadius: 6,
@@ -170,16 +173,14 @@ export default function SliderPage() {
                                     {slide.active ? 'Activo' : 'Inactivo'}
                                 </button>
 
-                                {/* Eliminar */}
                                 <button
-                                    onClick={() => deleteSlide(slide.id)}
+                                    onClick={() => handleDelete(slide.id)}
                                     style={{
                                         padding: '6px 10px',
                                         borderRadius: 6,
                                         border: '1px solid rgba(255,0,0,0.2)',
                                         background: 'none',
                                         color: 'rgba(255,80,80,0.5)',
-                                        fontFamily: 'var(--font-dm-sans)',
                                         fontSize: '0.75rem',
                                         cursor: 'pointer',
                                         transition: 'all 0.15s',
@@ -198,24 +199,8 @@ export default function SliderPage() {
                             </div>
                         </div>
                     ))}
-            </div>
-
-            {/* Upload placeholder */}
-            <div style={{
-                marginTop: '1.5rem',
-                border: '2px dashed rgba(255,255,255,0.1)',
-                borderRadius: 12,
-                padding: '2rem',
-                textAlign: 'center',
-            }}>
-                <p style={{
-                    fontFamily: 'var(--font-dm-sans)',
-                    fontSize: '0.85rem',
-                    color: 'rgba(255,255,255,0.3)',
-                }}>
-                    La subida de imágenes se conectará con Firebase Storage
-                </p>
-            </div>
+                </div>
+            )}
         </div>
     )
 }
@@ -229,7 +214,6 @@ function arrowBtnStyle(disabled: boolean): React.CSSProperties {
         background: 'none',
         color: disabled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.4)',
         cursor: disabled ? 'not-allowed' : 'pointer',
-        fontFamily: 'var(--font-dm-sans)',
         fontSize: '0.85rem',
         display: 'flex',
         alignItems: 'center',
