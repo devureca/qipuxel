@@ -1,12 +1,37 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import type { Product } from '@/types'
-import { mockProducts } from '@/lib/mockData'
+import { getProducts, deleteProduct } from '@/lib/firestore'
 
 export default function ProductosPage() {
-    const [products, setProducts] = useState<Product[]>(mockProducts)
+    const [products, setProducts] = useState<Product[]>([])
+    const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
+    const router = useRouter()
+
+    useEffect(() => {
+        fetchProducts()
+    }, [])
+
+    async function fetchProducts() {
+        setLoading(true)
+        try {
+            const data = await getProducts()
+            setProducts(data as Product[])
+        } catch (err) {
+            console.error('Error cargando productos:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    async function handleDelete(id: string) {
+        if (!confirm('¿Eliminar este producto?')) return
+        await deleteProduct(id)
+        fetchProducts()
+    }
 
     const filtered = products.filter(p =>
         p.name.toLowerCase().includes(search.toLowerCase())
@@ -39,7 +64,7 @@ export default function ProductosPage() {
                     </p>
                 </div>
                 <button
-                    onClick={() => window.location.href = '/admin/productos/nuevo'}
+                    onClick={() => router.push('/admin/productos/nuevo')}
                     style={{
                         background: '#fff',
                         color: '#111',
@@ -50,7 +75,6 @@ export default function ProductosPage() {
                         fontWeight: 700,
                         fontSize: '0.85rem',
                         cursor: 'pointer',
-                        transition: 'opacity 0.2s',
                     }}
                 >
                     + Nuevo producto
@@ -78,167 +102,209 @@ export default function ProductosPage() {
                 }}
             />
 
-            {/* Table */}
-            <div style={{
-                background: '#111',
-                border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 12,
-                overflow: 'hidden',
-            }}>
-                {/* Table header */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '60px 1fr 120px 100px 120px 80px',
-                    padding: '0.75rem 1.25rem',
-                    borderBottom: '1px solid rgba(255,255,255,0.06)',
-                    background: '#0d0d0d',
-                }}>
-                    {['', 'Nombre', 'Consola', 'Precio', 'Estado', ''].map((h, i) => (
-                        <span key={i} style={{
-                            fontFamily: 'var(--font-dm-sans)',
-                            fontSize: '0.72rem',
-                            fontWeight: 600,
-                            color: 'rgba(255,255,255,0.3)',
-                            letterSpacing: '0.1em',
-                            textTransform: 'uppercase',
-                        }}>
-                            {h}
-                        </span>
-                    ))}
+            {/* Loading */}
+            {loading ? (
+                <div style={{ textAlign: 'center', padding: '3rem' }}>
+                    <p style={{
+                        fontFamily: 'var(--font-dm-sans)',
+                        color: 'rgba(255,255,255,0.25)',
+                        fontSize: '0.9rem',
+                    }}>
+                        Cargando productos...
+                    </p>
                 </div>
-
-                {/* Rows */}
-                {filtered.length === 0 ? (
-                    <div style={{ padding: '3rem', textAlign: 'center' }}>
-                        <p style={{ fontFamily: 'var(--font-dm-sans)', color: 'rgba(255,255,255,0.25)', fontSize: '0.9rem' }}>
-                            No hay productos
-                        </p>
-                    </div>
-                ) : (
-                    filtered.map((product, i) => (
-                        <div
-                            key={product.id}
-                            style={{
-                                display: 'grid',
-                                gridTemplateColumns: '60px 1fr 120px 100px 120px 80px',
-                                padding: '0.875rem 1.25rem',
-                                borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                                alignItems: 'center',
-                                transition: 'background 0.15s',
-                            }}
-                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
-                            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                        >
-                            {/* Imagen */}
-                            <div style={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 6,
-                                overflow: 'hidden',
-                                background: '#1a1a1a',
+            ) : (
+                <div style={{
+                    background: '#111',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                }}>
+                    {/* Table header */}
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '60px 1fr 120px 100px 120px 80px',
+                        padding: '0.75rem 1.25rem',
+                        borderBottom: '1px solid rgba(255,255,255,0.06)',
+                        background: '#0d0d0d',
+                    }}>
+                        {['', 'Nombre', 'Consola', 'Precio', 'Estado', ''].map((h, i) => (
+                            <span key={i} style={{
+                                fontFamily: 'var(--font-dm-sans)',
+                                fontSize: '0.72rem',
+                                fontWeight: 600,
+                                color: 'rgba(255,255,255,0.3)',
+                                letterSpacing: '0.1em',
+                                textTransform: 'uppercase',
                             }}>
-                                {product.images[0] && (
-                                    <img
-                                        src={product.images[0]}
-                                        alt={product.name}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    />
-                                )}
-                            </div>
+                                {h}
+                            </span>
+                        ))}
+                    </div>
 
-                            {/* Nombre */}
-                            <div>
-                                <p style={{
+                    {/* Rows */}
+                    {filtered.length === 0 ? (
+                        <div style={{ padding: '3rem', textAlign: 'center' }}>
+                            <p style={{
+                                fontFamily: 'var(--font-dm-sans)',
+                                color: 'rgba(255,255,255,0.25)',
+                                fontSize: '0.9rem',
+                            }}>
+                                {search ? 'No hay resultados para tu búsqueda' : 'No hay productos todavía'}
+                            </p>
+                        </div>
+                    ) : (
+                        filtered.map((product, i) => (
+                            <div
+                                key={product.id}
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '60px 1fr 120px 100px 120px 80px',
+                                    padding: '0.875rem 1.25rem',
+                                    borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                                    alignItems: 'center',
+                                    transition: 'background 0.15s',
+                                }}
+                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                            >
+                                {/* Imagen */}
+                                <div style={{
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 6,
+                                    overflow: 'hidden',
+                                    background: '#1a1a1a',
+                                }}>
+                                    {product.images[0] && (
+                                        <img
+                                            src={product.images[0]}
+                                            alt={product.name}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+                                    )}
+                                </div>
+
+                                {/* Nombre */}
+                                <div>
+                                    <p style={{
+                                        fontFamily: 'var(--font-dm-sans)',
+                                        fontSize: '0.875rem',
+                                        fontWeight: 600,
+                                        color: '#fff',
+                                        marginBottom: 2,
+                                    }}>
+                                        {product.name}
+                                    </p>
+                                    <p style={{
+                                        fontFamily: 'var(--font-dm-sans)',
+                                        fontSize: '0.75rem',
+                                        color: 'rgba(255,255,255,0.3)',
+                                    }}>
+                                        {product.condition === 'sealed' ? 'Sellado' :
+                                            product.condition === 'like_new' ? 'Como nuevo' :
+                                                product.condition === 'good' ? 'Buen estado' : 'Con detalles'}
+                                    </p>
+                                </div>
+
+                                {/* Consola */}
+                                <span style={{
+                                    fontFamily: 'var(--font-dm-sans)',
+                                    fontSize: '0.8rem',
+                                    color: 'rgba(255,255,255,0.5)',
+                                }}>
+                                    {product.console || '—'}
+                                </span>
+
+                                {/* Precio */}
+                                <span style={{
                                     fontFamily: 'var(--font-dm-sans)',
                                     fontSize: '0.875rem',
                                     fontWeight: 600,
                                     color: '#fff',
-                                    marginBottom: 2,
                                 }}>
-                                    {product.name}
-                                </p>
-                                <p style={{
+                                    ${product.price.toLocaleString()}
+                                </span>
+
+                                {/* Estado */}
+                                <span style={{
+                                    display: 'inline-block',
+                                    padding: '3px 10px',
+                                    borderRadius: 100,
                                     fontFamily: 'var(--font-dm-sans)',
-                                    fontSize: '0.75rem',
-                                    color: 'rgba(255,255,255,0.3)',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 600,
+                                    background: product.status === 'available'
+                                        ? 'rgba(34,197,94,0.15)'
+                                        : product.status === 'reserved'
+                                            ? 'rgba(234,179,8,0.15)'
+                                            : 'rgba(255,255,255,0.08)',
+                                    color: product.status === 'available'
+                                        ? '#4ade80'
+                                        : product.status === 'reserved'
+                                            ? '#facc15'
+                                            : 'rgba(255,255,255,0.4)',
                                 }}>
-                                    {product.condition === 'sealed' ? 'Sellado' :
-                                        product.condition === 'like_new' ? 'Como nuevo' :
-                                            product.condition === 'good' ? 'Buen estado' : 'Con detalles'}
-                                </p>
+                                    {product.status === 'available' ? 'Disponible' :
+                                        product.status === 'reserved' ? 'Reservado' : 'Vendido'}
+                                </span>
+
+                                {/* Acciones */}
+                                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                    <button
+                                        onClick={() => router.push(`/admin/productos/${product.id}`)}
+                                        style={{
+                                            background: 'none',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            borderRadius: 6,
+                                            padding: '6px 10px',
+                                            fontFamily: 'var(--font-dm-sans)',
+                                            fontSize: '0.72rem',
+                                            color: 'rgba(255,255,255,0.5)',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.15s',
+                                        }}
+                                        onMouseEnter={e => {
+                                            e.currentTarget.style.color = '#fff'
+                                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
+                                        }}
+                                        onMouseLeave={e => {
+                                            e.currentTarget.style.color = 'rgba(255,255,255,0.5)'
+                                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+                                        }}
+                                    >
+                                        Editar
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(product.id)}
+                                        style={{
+                                            background: 'none',
+                                            border: '1px solid rgba(255,0,0,0.2)',
+                                            borderRadius: 6,
+                                            padding: '6px 10px',
+                                            fontFamily: 'var(--font-dm-sans)',
+                                            fontSize: '0.72rem',
+                                            color: 'rgba(255,80,80,0.5)',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.15s',
+                                        }}
+                                        onMouseEnter={e => {
+                                            e.currentTarget.style.borderColor = 'rgba(255,0,0,0.5)'
+                                            e.currentTarget.style.color = '#ff5050'
+                                        }}
+                                        onMouseLeave={e => {
+                                            e.currentTarget.style.borderColor = 'rgba(255,0,0,0.2)'
+                                            e.currentTarget.style.color = 'rgba(255,80,80,0.5)'
+                                        }}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
                             </div>
-
-                            {/* Consola */}
-                            <span style={{
-                                fontFamily: 'var(--font-dm-sans)',
-                                fontSize: '0.8rem',
-                                color: 'rgba(255,255,255,0.5)',
-                            }}>
-                                {product.console || '—'}
-                            </span>
-
-                            {/* Precio */}
-                            <span style={{
-                                fontFamily: 'var(--font-dm-sans)',
-                                fontSize: '0.875rem',
-                                fontWeight: 600,
-                                color: '#fff',
-                            }}>
-                                ${product.price.toLocaleString()}
-                            </span>
-
-                            {/* Estado */}
-                            <span style={{
-                                display: 'inline-block',
-                                padding: '3px 10px',
-                                borderRadius: 100,
-                                fontFamily: 'var(--font-dm-sans)',
-                                fontSize: '0.72rem',
-                                fontWeight: 600,
-                                background: product.status === 'available'
-                                    ? 'rgba(34,197,94,0.15)'
-                                    : product.status === 'reserved'
-                                        ? 'rgba(234,179,8,0.15)'
-                                        : 'rgba(255,255,255,0.08)',
-                                color: product.status === 'available'
-                                    ? '#4ade80'
-                                    : product.status === 'reserved'
-                                        ? '#facc15'
-                                        : 'rgba(255,255,255,0.4)',
-                            }}>
-                                {product.status === 'available' ? 'Disponible' :
-                                    product.status === 'reserved' ? 'Reservado' : 'Vendido'}
-                            </span>
-
-                            {/* Acciones */}
-                            <button
-                                onClick={() => window.location.href = `/admin/productos/${product.id}`}
-                                style={{
-                                    background: 'none',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    borderRadius: 6,
-                                    padding: '6px 12px',
-                                    fontFamily: 'var(--font-dm-sans)',
-                                    fontSize: '0.75rem',
-                                    color: 'rgba(255,255,255,0.5)',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.15s',
-                                }}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.color = '#fff'
-                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.color = 'rgba(255,255,255,0.5)'
-                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
-                                }}
-                            >
-                                Editar
-                            </button>
-                        </div>
-                    ))
-                )}
-            </div>
+                        ))
+                    )}
+                </div>
+            )}
         </div>
     )
 }
