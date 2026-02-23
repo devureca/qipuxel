@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { getProduct, createProduct, updateProduct, deleteProduct } from '@/lib/firestore'
-import { getCategories } from '@/lib/firestore'
+import { getProduct, createProduct, updateProduct, deleteProduct, getCategories } from '@/lib/firestore'
+import { uploadImage, deleteImage } from '@/lib/storage'
 import type { Product, Category } from '@/types'
 
 const CONSOLES = ['Nintendo 64', 'PlayStation', 'PlayStation 2', 'PlayStation 3', 'PlayStation 4', 'PlayStation 5', 'Xbox', 'Xbox 360', 'Xbox One', 'Nintendo Switch', 'Game Boy', 'SNES', 'Sega', 'PC', 'Otro']
@@ -32,6 +32,7 @@ export default function ProductoFormPage() {
     const [loading, setLoading] = useState(!isNew)
     const [saving, setSaving] = useState(false)
     const [deleting, setDeleting] = useState(false)
+    const [uploading, setUploading] = useState(false)
 
     useEffect(() => {
         fetchCategories()
@@ -268,22 +269,104 @@ export default function ProductoFormPage() {
                     </div>
                 </Field>
 
-                {/* Imágenes - placeholder hasta conectar Storage */}
+                {/* Imágenes */}
                 <Field label="IMÁGENES (máx. 4)">
-                    <div style={{
-                        border: '2px dashed rgba(255,255,255,0.1)',
-                        borderRadius: 12,
-                        padding: '2rem',
-                        textAlign: 'center',
-                    }}>
-                        <p style={{
-                            fontFamily: 'var(--font-dm-sans)',
-                            fontSize: '0.85rem',
-                            color: 'rgba(255,255,255,0.3)',
-                            marginBottom: '0.5rem',
-                        }}>
-                            La subida de imágenes se conectará en el próximo paso
-                        </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+
+                        {/* Preview imágenes actuales */}
+                        {form.images.length > 0 && (
+                            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                {form.images.map((url, i) => (
+                                    <div key={i} style={{ position: 'relative', width: 80, height: 80 }}>
+                                        <img
+                                            src={url}
+                                            alt={`Imagen ${i + 1}`}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }}
+                                        />
+                                        <button
+                                            onClick={async () => {
+                                                await deleteImage(url)
+                                                update('images', form.images.filter((_, idx) => idx !== i))
+                                            }}
+                                            style={{
+                                                position: 'absolute',
+                                                top: -8,
+                                                right: -8,
+                                                width: 22,
+                                                height: 22,
+                                                borderRadius: '50%',
+                                                background: '#ff4444',
+                                                border: 'none',
+                                                color: '#fff',
+                                                fontSize: '0.7rem',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                            }}
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Botón para subir */}
+                        {form.images.length < 4 && (
+                            <label
+                                style={{
+                                    border: '2px dashed rgba(255,255,255,0.1)',
+                                    borderRadius: 12,
+                                    padding: '1.5rem',
+                                    textAlign: 'center',
+                                    cursor: uploading ? 'not-allowed' : 'pointer',
+                                    opacity: uploading ? 0.6 : 1,
+                                    transition: 'border-color 0.2s',
+                                    display: 'block',
+                                }}
+                                onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)')}
+                                onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)')}
+                            >
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    style={{ display: 'none' }}
+                                    onChange={async e => {
+                                        const files = Array.from(e.target.files ?? [])
+                                        if (!files.length) return
+                                        setUploading(true)
+                                        try {
+                                            const urls = await Promise.all(
+                                                files.slice(0, 4 - form.images.length).map(f => uploadImage(f, 'products'))
+                                            )
+                                            update('images', [...form.images, ...urls])
+                                        } catch (err) {
+                                            console.error(err)
+                                            alert('Error al subir imagen')
+                                        } finally {
+                                            setUploading(false)
+                                        }
+                                    }}
+                                />
+                                <p style={{
+                                    fontFamily: 'var(--font-dm-sans)',
+                                    fontSize: '0.85rem',
+                                    color: 'rgba(255,255,255,0.3)',
+                                }}>
+                                    {uploading ? 'Subiendo...' : '+ Subir imágenes'}
+                                </p>
+                                <p style={{
+                                    fontFamily: 'var(--font-dm-sans)',
+                                    fontSize: '0.72rem',
+                                    color: 'rgba(255,255,255,0.15)',
+                                    marginTop: 4,
+                                }}>
+                                    JPG, PNG o WEBP — máx. {4 - form.images.length} más
+                                </p>
+                            </label>
+                        )}
                     </div>
                 </Field>
 
