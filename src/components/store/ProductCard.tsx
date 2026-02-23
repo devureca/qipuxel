@@ -20,7 +20,7 @@ const CONDITION_LABEL: Record<string, string> = {
 const TAG_LABEL: Record<string, string> = {
     offer: 'OFERTA',
     new: 'NUEVO',
-    featured: 'DESTACADO',
+    featured: 'DROP',
 }
 
 export default function ProductCard({ product, config, darkMode, onOpen }: ProductCardProps) {
@@ -28,102 +28,208 @@ export default function ProductCard({ product, config, darkMode, onOpen }: Produ
     const isSold = product.status === 'sold'
     const isReserved = product.status === 'reserved'
 
-    // Badge: primero offer, luego new, luego featured
     const badgeTag = ['offer', 'new', 'featured'].find(t => product.tags.includes(t as never))
     const badge = badgeTag ? TAG_LABEL[badgeTag] : null
 
     return (
         <div
-            onClick={() => !isSold && onOpen(product)}
+            onClick={() => !isSold && !isReserved && onOpen(product)}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            className="rounded-lg overflow-hidden transition-all duration-300"
             style={{
-                background: darkMode ? config.cardBg : '#fff',
-                boxShadow: hovered && !isSold
-                    ? '0 16px 48px rgba(0,0,0,0.2)'
-                    : '0 2px 12px rgba(0,0,0,0.08)',
-                transform: hovered && !isSold ? 'translateY(-6px)' : 'translateY(0)',
+                cursor: isSold || isReserved ? 'default' : 'pointer',
                 opacity: isSold ? 0.6 : 1,
-                cursor: isSold ? 'default' : 'pointer',
-                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'}`,
+                transition: 'all 0.3s ease',
             }}
         >
-            {/* Image */}
+            {/* Image container */}
             <div
-                className="relative overflow-hidden"
-                style={{ aspectRatio: '1', background: darkMode ? '#1a1a1a' : '#f5f5f5' }}
+                style={{
+                    position: 'relative',
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                    aspectRatio: '3/4',
+                    background: darkMode ? '#1a1a1a' : '#f0f0f0',
+                    marginBottom: '1rem',
+                }}
             >
                 <img
                     src={product.images[0]}
                     alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-500"
-                    style={{ transform: hovered ? 'scale(1.06)' : 'scale(1)' }}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        transition: 'transform 0.5s ease',
+                        transform: hovered && !isSold ? 'scale(1.05)' : 'scale(1)',
+                    }}
                 />
 
-                {/* Badge */}
+                {/* Badge - pill negro como Velora */}
                 {badge && !isSold && !isReserved && (
                     <span
-                        className="absolute top-2 left-2 font-sans text-[0.65rem] font-bold tracking-widest uppercase text-white px-2 py-1 rounded"
-                        style={{ background: config.primaryColor }}
+                        style={{
+                            position: 'absolute',
+                            top: 12,
+                            left: 12,
+                            background: '#111',
+                            color: '#fff',
+                            fontFamily: 'var(--font-dm-sans)',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.1em',
+                            padding: '5px 12px',
+                            borderRadius: 100,
+                        }}
                     >
                         {badge}
                     </span>
                 )}
 
+                {/* Sealed badge */}
+                {product.condition === 'sealed' && !isSold && !isReserved && (
+                    <span
+                        style={{
+                            position: 'absolute',
+                            top: 12,
+                            right: 12,
+                            background: 'rgba(255,255,255,0.15)',
+                            backdropFilter: 'blur(8px)',
+                            color: '#fff',
+                            fontFamily: 'var(--font-dm-sans)',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.1em',
+                            padding: '5px 10px',
+                            borderRadius: 100,
+                            border: '1px solid rgba(255,255,255,0.2)',
+                        }}
+                    >
+                        SELLADO
+                    </span>
+                )}
+
                 {/* Sold overlay */}
                 {isSold && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                        <span className="font-display text-3xl text-white tracking-widest">VENDIDO</span>
+                    <div
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            background: 'rgba(0,0,0,0.55)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <span
+                            style={{
+                                fontFamily: 'var(--font-bebas)',
+                                fontSize: '2.5rem',
+                                color: '#fff',
+                                letterSpacing: '0.1em',
+                            }}
+                        >
+                            VENDIDO
+                        </span>
                     </div>
                 )}
 
                 {/* Reserved overlay */}
                 {isReserved && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                        <span className="font-display text-3xl text-white tracking-widest">RESERVADO</span>
+                    <div
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            background: 'rgba(0,0,0,0.55)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <span
+                            style={{
+                                fontFamily: 'var(--font-bebas)',
+                                fontSize: '2.5rem',
+                                color: '#fff',
+                                letterSpacing: '0.1em',
+                            }}
+                        >
+                            RESERVADO
+                        </span>
                     </div>
-                )}
-
-                {/* Sealed badge */}
-                {product.condition === 'sealed' && !isSold && !isReserved && (
-                    <span className="absolute top-2 right-2 font-sans text-[0.6rem] font-bold tracking-widest uppercase text-white px-2 py-1 rounded bg-black/60 border border-white/20">
-                        SELLADO
-                    </span>
                 )}
             </div>
 
-            {/* Info */}
-            <div className="p-4">
+            {/* Info - fuera de la imagen como Velora */}
+            <div style={{ padding: '0 4px' }}>
                 {product.console && (
-                    <p className="font-sans text-[0.7rem] tracking-widest uppercase mb-1" style={{ color: '#888' }}>
+                    <p
+                        style={{
+                            fontFamily: 'var(--font-dm-sans)',
+                            fontSize: '0.72rem',
+                            color: '#888',
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            marginBottom: '0.3rem',
+                        }}
+                    >
                         {product.console}
                     </p>
                 )}
 
                 <h3
-                    className="font-sans font-semibold text-sm leading-snug mb-3"
-                    style={{ color: darkMode ? '#f1f1f1' : '#111' }}
+                    style={{
+                        fontFamily: 'var(--font-dm-sans)',
+                        fontWeight: 600,
+                        fontSize: '1rem',
+                        color: darkMode ? '#f1f1f1' : '#111',
+                        marginBottom: '0.4rem',
+                        lineHeight: 1.3,
+                    }}
                 >
                     {product.name}
                 </h3>
 
-                <div className="flex items-center justify-between">
+                {product.description && (
+                    <p
+                        style={{
+                            fontFamily: 'var(--font-dm-sans)',
+                            fontSize: '0.8rem',
+                            color: darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                            marginBottom: '0.6rem',
+                            lineHeight: 1.5,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                        }}
+                    >
+                        {product.description}
+                    </p>
+                )}
+
+                {/* Price row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span
-                        className="font-display text-xl tracking-wide"
-                        style={{ color: config.primaryColor }}
+                        style={{
+                            fontFamily: 'var(--font-dm-sans)',
+                            fontWeight: 700,
+                            fontSize: '1rem',
+                            color: config.primaryColor,
+                        }}
                     >
                         ${product.price.toLocaleString()}
                     </span>
-
-                    <span className="font-sans text-[0.7rem]" style={{ color: '#888' }}>
-                        {product.complete ? '✓ Completo' : 'Sin caja'}
+                    <span
+                        style={{
+                            fontFamily: 'var(--font-dm-sans)',
+                            fontSize: '0.75rem',
+                            color: '#888',
+                            textDecoration: 'line-through',
+                        }}
+                    >
                     </span>
                 </div>
-
-                <p className="font-sans text-[0.7rem] mt-1" style={{ color: '#666' }}>
-                    {CONDITION_LABEL[product.condition]}
-                </p>
             </div>
         </div>
     )
