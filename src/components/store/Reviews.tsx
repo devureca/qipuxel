@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { Review } from '@/types'
+import ReviewForm from './ReviewForm'
 
 interface ReviewsProps {
     reviews: Review[]
@@ -123,6 +124,7 @@ function ReviewRow({
 
 export default function Reviews({ reviews, darkMode, primaryColor }: ReviewsProps) {
     const [titleRef, titleInView] = useInView()
+    const [showForm, setShowForm] = useState(false)
     const borderColor = darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'
 
     const visibleReviews = reviews.filter(r => r.visible)
@@ -210,6 +212,64 @@ export default function Reviews({ reviews, darkMode, primaryColor }: ReviewsProp
                         isLast={i === visibleReviews.length - 1}
                     />
                 ))}
+
+                {/* Botón para abrir modal */}
+                <div style={{ textAlign: 'center', marginTop: '2.5rem' }}>
+                    <button
+                        onClick={() => setShowForm(true)}
+                        style={{
+                            background: 'none',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: 100,
+                            padding: '12px 32px',
+                            fontFamily: 'var(--font-dm-sans)',
+                            fontWeight: 600,
+                            fontSize: '0.875rem',
+                            color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.borderColor = primaryColor
+                            e.currentTarget.style.color = primaryColor
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.borderColor = borderColor
+                            e.currentTarget.style.color = darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+                        }}
+                    >
+                        Dejar una reseña
+                    </button>
+                </div>
+
+                {/* Modal */}
+                {showForm && (
+                    <div
+                        onClick={() => setShowForm(false)}
+                        style={{
+                            position: 'fixed',
+                            inset: 0,
+                            background: 'rgba(0,0,0,0.6)',
+                            backdropFilter: 'blur(4px)',
+                            zIndex: 200,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '1rem',
+                        }}
+                    >
+                        <div
+                            onClick={e => e.stopPropagation()}
+                            style={{ width: '100%', maxWidth: 480 }}
+                        >
+                            <ReviewForm
+                                darkMode={darkMode}
+                                primaryColor={primaryColor}
+                                onClose={() => setShowForm(false)}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
         </section>
     )
