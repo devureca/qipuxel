@@ -25,130 +25,165 @@ function useInView(threshold = 0.1) {
 
 function StarRating({ rating, primaryColor }: { rating: number; primaryColor: string }) {
     return (
-        <div className="flex gap-1">
+        <div style={{ display: 'flex', gap: 2 }}>
             {[1, 2, 3, 4, 5].map(s => (
-                <span
-                    key={s}
-                    className="text-sm"
-                    style={{ color: s <= rating ? primaryColor : '#333' }}
-                >
-                    ★
-                </span>
+                <span key={s} style={{ color: s <= rating ? primaryColor : '#ddd', fontSize: 13 }}>★</span>
             ))}
         </div>
     )
 }
 
-function ReviewCard({
+function ReviewRow({
     review,
     darkMode,
     primaryColor,
     delay,
+    isLast,
 }: {
     review: Review
     darkMode: boolean
     primaryColor: string
     delay: number
+    isLast: boolean
 }) {
     const [ref, inView] = useInView()
+    const borderColor = darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'
 
     return (
         <div
             ref={ref}
-            className="p-6 rounded-xl transition-all duration-700"
             style={{
-                background: darkMode ? '#1a1a1a' : '#f9f9f9',
-                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'}`,
+                display: 'grid',
+                gridTemplateColumns: '260px 1fr',
+                gap: '2rem',
+                padding: '2rem 0',
+                borderBottom: isLast ? 'none' : `1px solid ${borderColor}`,
                 opacity: inView ? 1 : 0,
-                transform: inView ? 'translateY(0)' : 'translateY(24px)',
-                transitionDelay: `${delay}ms`,
+                transform: inView ? 'translateY(0)' : 'translateY(20px)',
+                transition: `all 0.6s ease ${delay}ms`,
             }}
         >
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-4">
-                {/* Avatar */}
+            {/* Left - avatar + name */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center font-display text-lg text-white shrink-0"
-                    style={{ background: primaryColor }}
+                    style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: '50%',
+                        background: primaryColor,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        fontFamily: 'var(--font-bebas)',
+                        fontSize: '1.4rem',
+                        color: '#fff',
+                        letterSpacing: '0.05em',
+                    }}
                 >
                     {review.name.charAt(0).toUpperCase()}
                 </div>
-
                 <div>
                     <p
-                        className="font-sans font-semibold text-sm"
-                        style={{ color: darkMode ? '#f1f1f1' : '#111' }}
+                        style={{
+                            fontFamily: 'var(--font-dm-sans)',
+                            fontWeight: 600,
+                            fontSize: '0.95rem',
+                            color: darkMode ? '#f1f1f1' : '#111',
+                            marginBottom: 4,
+                        }}
                     >
                         {review.name}
                     </p>
-                    <p className="font-sans text-xs" style={{ color: '#888' }}>
-                        {review.date ? new Date(review.date ?? '').toLocaleDateString('es-AR', { month: 'long', year: 'numeric' }) : ''}
-                    </p>
-                </div>
-
-                <div className="ml-auto">
                     <StarRating rating={review.rating} primaryColor={primaryColor} />
                 </div>
             </div>
 
-            {/* Text */}
-            <p
-                className="font-sans text-sm leading-relaxed"
-                style={{ color: darkMode ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.65)' }}
-            >
-                {review.text}
-            </p>
+            {/* Right - review text */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <p
+                    style={{
+                        fontFamily: 'var(--font-dm-sans)',
+                        fontSize: '0.95rem',
+                        color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                        lineHeight: 1.7,
+                    }}
+                >
+                    "{review.text}"
+                </p>
+            </div>
         </div>
     )
 }
 
 export default function Reviews({ reviews, darkMode, primaryColor }: ReviewsProps) {
     const [titleRef, titleInView] = useInView()
+    const borderColor = darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'
 
     const visibleReviews = reviews.filter(r => r.visible)
 
-    // Si no hay reseñas visibles no renderiza nada
     if (!visibleReviews.length) return null
 
     return (
         <section
-            className="py-24 px-[5%]"
-            style={{ background: darkMode ? '#0d0d0d' : '#f5f5f5' }}
+            style={{
+                padding: '80px 5%',
+                background: darkMode ? '#0d0d0d' : '#f7f6f3',
+            }}
         >
-            <div className="max-w-[1280px] mx-auto">
+            <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
                 {/* Title */}
                 <div
                     ref={titleRef}
-                    className="mb-12 transition-all duration-600"
                     style={{
+                        marginBottom: '0.5rem',
                         opacity: titleInView ? 1 : 0,
                         transform: titleInView ? 'translateY(0)' : 'translateY(24px)',
+                        transition: 'all 0.6s ease',
                     }}
                 >
-                    <p className="font-sans text-xs tracking-[0.2em] uppercase mb-2" style={{ color: '#888' }}>
-                        Lo que dicen
-                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                        <div style={{ width: 3, height: 18, background: primaryColor, borderRadius: 2 }} />
+                        <p
+                            style={{
+                                fontFamily: 'var(--font-dm-sans)',
+                                fontSize: '0.75rem',
+                                color: '#888',
+                                letterSpacing: '0.2em',
+                                textTransform: 'uppercase',
+                            }}
+                        >
+                            Testimonios
+                        </p>
+                    </div>
                     <h2
-                        className="font-display text-5xl tracking-wide"
-                        style={{ color: darkMode ? '#f1f1f1' : '#111' }}
+                        style={{
+                            fontFamily: 'var(--font-dm-sans)',
+                            fontWeight: 700,
+                            fontSize: 'clamp(1.8rem, 3vw, 2.5rem)',
+                            color: darkMode ? '#f1f1f1' : '#111',
+                            letterSpacing: '-0.02em',
+                        }}
                     >
                         Clientes felices
                     </h2>
                 </div>
 
-                {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {visibleReviews.map((review, i) => (
-                        <ReviewCard
-                            key={review.id}
-                            review={review}
-                            darkMode={darkMode}
-                            primaryColor={primaryColor}
-                            delay={i * 100}
-                        />
-                    ))}
-                </div>
+                {/* Divider */}
+                <div style={{ height: 1, background: borderColor, margin: '2rem 0 0' }} />
+
+                {/* Reviews list */}
+                {visibleReviews.map((review, i) => (
+                    <ReviewRow
+                        key={review.id}
+                        review={review}
+                        darkMode={darkMode}
+                        primaryColor={primaryColor}
+                        delay={i * 80}
+                        isLast={i === visibleReviews.length - 1}
+                    />
+                ))}
             </div>
         </section>
     )
