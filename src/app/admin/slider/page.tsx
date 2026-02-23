@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import type { SliderBanner } from '@/types'
-import { getSlides, updateSlide, deleteSlide } from '@/lib/firestore'
+import { getSlides, updateSlide, deleteSlide, createSlide } from '@/lib/firestore'
+import { uploadImage } from '@/lib/storage'
 
 export default function SliderPage() {
     const [slides, setSlides] = useState<SliderBanner[]>([])
     const [loading, setLoading] = useState(true)
+    const [uploading, setUploading] = useState(false)
 
     useEffect(() => {
         fetchSlides()
@@ -31,17 +33,17 @@ export default function SliderPage() {
 
     async function moveUp(index: number) {
         if (index === 0) return
-        const a = slides[index - 1]
-        const b = slides[index]
+        const a = sorted[index - 1]
+        const b = sorted[index]
         await updateSlide(a.id, { order: b.order })
         await updateSlide(b.id, { order: a.order })
         fetchSlides()
     }
 
     async function moveDown(index: number) {
-        if (index === slides.length - 1) return
-        const a = slides[index]
-        const b = slides[index + 1]
+        if (index === sorted.length - 1) return
+        const a = sorted[index]
+        const b = sorted[index + 1]
         await updateSlide(a.id, { order: b.order })
         await updateSlide(b.id, { order: a.order })
         fetchSlides()
@@ -57,6 +59,7 @@ export default function SliderPage() {
 
     return (
         <div style={{ maxWidth: 720 }}>
+            {/* Header */}
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -80,10 +83,56 @@ export default function SliderPage() {
                         {slides.filter(s => s.active).length} slides activos de {slides.length}
                     </p>
                 </div>
+
+                {/* Botón subir imagen */}
+                <label style={{
+                    background: '#fff',
+                    color: '#111',
+                    borderRadius: 8,
+                    padding: '10px 20px',
+                    fontFamily: 'var(--font-dm-sans)',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    cursor: uploading ? 'not-allowed' : 'pointer',
+                    opacity: uploading ? 0.6 : 1,
+                    display: 'inline-block',
+                    transition: 'opacity 0.2s',
+                }}>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={async e => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            setUploading(true)
+                            try {
+                                const url = await uploadImage(file, 'slides')
+                                await createSlide({
+                                    image: url,
+                                    order: slides.length + 1,
+                                    active: true,
+                                })
+                                fetchSlides()
+                            } catch (err) {
+                                console.error(err)
+                                alert('Error al subir imagen')
+                            } finally {
+                                setUploading(false)
+                            }
+                        }}
+                    />
+                    {uploading ? 'Subiendo...' : '+ Agregar slide'}
+                </label>
             </div>
 
             {loading ? (
-                <p style={{ fontFamily: 'var(--font-dm-sans)', color: 'rgba(255,255,255,0.25)', textAlign: 'center', padding: '3rem' }}>
+                <p style={{
+                    fontFamily: 'var(--font-dm-sans)',
+                    color: 'rgba(255,255,255,0.25)',
+                    textAlign: 'center',
+                    padding: '3rem',
+                }}>
                     Cargando slides...
                 </p>
             ) : sorted.length === 0 ? (
@@ -93,8 +142,20 @@ export default function SliderPage() {
                     padding: '3rem',
                     textAlign: 'center',
                 }}>
-                    <p style={{ fontFamily: 'var(--font-dm-sans)', color: 'rgba(255,255,255,0.25)', fontSize: '0.9rem' }}>
-                        No hay slides todavía. Agregá imágenes desde Firebase Storage.
+                    <p style={{
+                        fontFamily: 'var(--font-dm-sans)',
+                        color: 'rgba(255,255,255,0.25)',
+                        fontSize: '0.9rem',
+                        marginBottom: '0.5rem',
+                    }}>
+                        No hay slides todavía.
+                    </p>
+                    <p style={{
+                        fontFamily: 'var(--font-dm-sans)',
+                        color: 'rgba(255,255,255,0.15)',
+                        fontSize: '0.8rem',
+                    }}>
+                        Hacé click en "+ Agregar slide" para subir la primera imagen.
                     </p>
                 </div>
             ) : (
@@ -115,6 +176,7 @@ export default function SliderPage() {
                                 transition: 'opacity 0.2s',
                             }}
                         >
+                            {/* Preview */}
                             <div style={{
                                 width: 80,
                                 height: 56,
@@ -129,6 +191,7 @@ export default function SliderPage() {
                                 />
                             </div>
 
+                            {/* Info */}
                             <div>
                                 <p style={{
                                     fontFamily: 'var(--font-dm-sans)',
@@ -151,6 +214,7 @@ export default function SliderPage() {
                                 </p>
                             </div>
 
+                            {/* Acciones */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <button onClick={() => moveUp(i)} disabled={i === 0} style={arrowBtnStyle(i === 0)}>↑</button>
                                 <button onClick={() => moveDown(i)} disabled={i === sorted.length - 1} style={arrowBtnStyle(i === sorted.length - 1)}>↓</button>
