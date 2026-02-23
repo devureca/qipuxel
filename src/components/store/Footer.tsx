@@ -17,7 +17,6 @@ export default function Footer({ config, categories, darkMode }: FooterProps) {
     const bg = '#0d0d0d'
     const border = 'rgba(255,255,255,0.07)'
     const textMuted = 'rgba(255,255,255,0.45)'
-    const textColor = 'rgba(255,255,255,0.75)'
 
     const pages = [
         { label: 'Inicio', href: '/' },
@@ -28,173 +27,139 @@ export default function Footer({ config, categories, darkMode }: FooterProps) {
     ]
 
     const socials = [
-        config.instagram && {
-            label: 'Instagram',
-            href: config.instagram,
-            icon: <InstagramIcon />,
-        },
-        config.facebook && {
-            label: 'Facebook',
-            href: config.facebook,
-            icon: <FacebookIcon />,
-        },
-        config.tiktok && {
-            label: 'TikTok',
-            href: config.tiktok,
-            icon: <TikTokIcon />,
-        },
-        config.whatsapp && {
-            label: 'WhatsApp',
-            href: `https://wa.me/${config.whatsapp}`,
-            icon: <WhatsAppIcon />,
-        },
+        config.instagram && { label: 'Instagram', href: config.instagram, icon: <InstagramIcon /> },
+        config.facebook && { label: 'Facebook', href: config.facebook, icon: <FacebookIcon /> },
+        config.tiktok && { label: 'TikTok', href: config.tiktok, icon: <TikTokIcon /> },
+        config.whatsapp && { label: 'WhatsApp', href: `https://wa.me/${config.whatsapp}`, icon: <WhatsAppIcon /> },
     ].filter(Boolean) as { label: string; href: string; icon: React.ReactNode }[]
 
     return (
         <footer style={{ background: bg, borderTop: `1px solid ${border}` }}>
-            <div
-                style={{
-                    maxWidth: 1280,
-                    margin: '0 auto',
-                    padding: '64px 5% 0',
-                }}
-            >
-                {/* Top grid */}
-                <div
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1.8fr 1fr 1fr 1fr',
-                        gap: '3rem',
-                        marginBottom: '4rem',
-                    }}
-                    className="grid-footer"
-                >
+
+            <div style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 5% 0' }}>
+                <div className="footer-grid">
+
                     {/* Brand */}
                     <div>
-                        <div
-                            style={{
-                                fontFamily: 'var(--font-bebas)',
-                                fontSize: '2rem',
-                                letterSpacing: '0.1em',
-                                color: '#fff',
-                                marginBottom: '0.75rem',
-                            }}
-                        >
+                        <div style={{
+                            fontFamily: 'var(--font-bebas)',
+                            fontSize: '2rem',
+                            letterSpacing: '0.1em',
+                            color: '#fff',
+                            marginBottom: '0.75rem',
+                        }}>
                             {config.name}
                         </div>
                         {config.tagline && (
-                            <p
-                                style={{
-                                    fontFamily: 'var(--font-dm-sans)',
-                                    fontWeight: 600,
-                                    fontSize: '0.85rem',
-                                    color: textColor,
-                                    marginBottom: '0.5rem',
-                                }}
-                            >
+                            <p style={{
+                                fontFamily: 'var(--font-dm-sans)',
+                                fontWeight: 600,
+                                fontSize: '0.85rem',
+                                color: 'rgba(255,255,255,0.75)',
+                                marginBottom: '0.5rem',
+                            }}>
                                 {config.tagline}
                             </p>
                         )}
-                        <p
-                            style={{
-                                fontFamily: 'var(--font-dm-sans)',
-                                fontSize: '0.82rem',
-                                color: textMuted,
-                                lineHeight: 1.7,
-                                maxWidth: 280,
-                            }}
-                        >
+                        <p style={{
+                            fontFamily: 'var(--font-dm-sans)',
+                            fontSize: '0.82rem',
+                            color: textMuted,
+                            lineHeight: 1.7,
+                            maxWidth: 280,
+                        }}>
                             Tu catálogo online de videojuegos y coleccionables. Encontrá lo que buscás y contactanos por WhatsApp.
                         </p>
                     </div>
 
-                    {/* Categorías */}
-                    <div>
-                        <p
-                            style={{
+                    {/* Categorías + Páginas */}
+                    <div className="footer-links-grid" style={{ gridColumn: 'span 1' }}>
+                        {/* Categorías */}
+                        <div>
+                            <p style={{
                                 fontFamily: 'var(--font-dm-sans)',
                                 fontWeight: 700,
                                 fontSize: '0.85rem',
                                 color: '#fff',
-                                letterSpacing: '0.05em',
                                 marginBottom: '1.25rem',
-                            }}
-                        >
-                            Categorías
-                        </p>
-                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {visibleCategories.map(cat => (
-                                <li key={cat.id}>
-                                    <a
-                                        href={`/catalogo?categoria=${cat.slug}`}
-                                        style={{
-                                            fontFamily: 'var(--font-dm-sans)',
-                                            fontSize: '0.85rem',
-                                            color: textMuted,
-                                            textDecoration: 'none',
-                                            transition: 'color 0.2s',
-                                        }}
-                                        onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-                                        onMouseLeave={e => (e.currentTarget.style.color = textMuted)}
-                                    >
-                                        {cat.name}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
+                            }}>
+                                Categorías
+                            </p>
+                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {visibleCategories.map(cat => (
+                                    <li key={cat.id}>
+                                        <a
+                                            href={`/catalogo?categoria=${cat.slug}`}
+                                            style={{
+                                                fontFamily: 'var(--font-dm-sans)',
+                                                fontSize: '0.85rem',
+                                                color: textMuted,
+                                                textDecoration: 'none',
+                                                transition: 'color 0.2s',
+                                            }}
+                                            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                                            onMouseLeave={e => (e.currentTarget.style.color = textMuted)}
+                                        >
+                                            {cat.name}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* Páginas */}
+                        <div>
+                            <p style={{
+                                fontFamily: 'var(--font-dm-sans)',
+                                fontWeight: 700,
+                                fontSize: '0.85rem',
+                                color: '#fff',
+                                marginBottom: '1.25rem',
+                            }}>
+                                Páginas
+                            </p>
+                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {pages.map(page => (
+                                    <li key={page.href}>
+                                        <a
+                                            href={page.href}
+                                            style={{
+                                                fontFamily: 'var(--font-dm-sans)',
+                                                fontSize: '0.85rem',
+                                                color: textMuted,
+                                                textDecoration: 'none',
+                                                transition: 'color 0.2s',
+                                            }}
+                                            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                                            onMouseLeave={e => (e.currentTarget.style.color = textMuted)}
+                                        >
+                                            {page.label}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                     </div>
 
-                    {/* Páginas */}
-                    <div>
-                        <p
-                            style={{
-                                fontFamily: 'var(--font-dm-sans)',
-                                fontWeight: 700,
-                                fontSize: '0.85rem',
-                                color: '#fff',
-                                letterSpacing: '0.05em',
-                                marginBottom: '1.25rem',
-                            }}
-                        >
-                            Páginas
-                        </p>
-                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {pages.map(page => (
-                                <li key={page.href}>
-                                    <a
-                                        href={page.href}
-                                        style={{
-                                            fontFamily: 'var(--font-dm-sans)',
-                                            fontSize: '0.85rem',
-                                            color: textMuted,
-                                            textDecoration: 'none',
-                                            transition: 'color 0.2s',
-                                        }}
-                                        onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-                                        onMouseLeave={e => (e.currentTarget.style.color = textMuted)}
-                                    >
-                                        {page.label}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Social */}
-                    <div>
-                        <p
-                            style={{
-                                fontFamily: 'var(--font-dm-sans)',
-                                fontWeight: 700,
-                                fontSize: '0.85rem',
-                                color: '#fff',
-                                letterSpacing: '0.05em',
-                                marginBottom: '1.25rem',
-                            }}
-                        >
+                    {/* Social - horizontal en mobile */}
+                    <div className="footer-social">
+                        <p style={{
+                            fontFamily: 'var(--font-dm-sans)',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            color: '#fff',
+                            marginBottom: '1.25rem',
+                        }}>
                             Social
                         </p>
-                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                        <ul style={{
+                            listStyle: 'none',
+                            padding: 0,
+                            margin: 0,
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '1.5rem',
+                        }}>
                             {socials.map(social => (
                                 <li key={social.label}>
                                     <a
@@ -204,7 +169,7 @@ export default function Footer({ config, categories, darkMode }: FooterProps) {
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '0.625rem',
+                                            gap: '0.5rem',
                                             fontFamily: 'var(--font-dm-sans)',
                                             fontSize: '0.85rem',
                                             color: textMuted,
@@ -226,43 +191,25 @@ export default function Footer({ config, categories, darkMode }: FooterProps) {
                 </div>
 
                 {/* Bottom */}
-                <div
-                    style={{
-                        borderTop: `1px solid ${border}`,
-                        padding: '1.5rem 0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem',
-                    }}
-                >
-                    <p
-                        style={{
-                            fontFamily: 'var(--font-dm-sans)',
-                            fontSize: '0.8rem',
-                            color: 'rgba(255,255,255,0.25)',
-                            textAlign: 'center',
-                        }}
-                    >
+                <div style={{
+                    borderTop: `1px solid ${border}`,
+                    marginTop: '3rem',
+                    padding: '1.5rem 0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}>
+                    <p style={{
+                        fontFamily: 'var(--font-dm-sans)',
+                        fontSize: '0.8rem',
+                        color: 'rgba(255,255,255,0.25)',
+                        textAlign: 'center',
+                    }}>
                         © Copyright <strong style={{ color: 'rgba(255,255,255,0.45)' }}>{config.name}</strong> {year} | Powered by{' '}
                         <strong style={{ color: config.primaryColor }}>Qipuxel</strong>
                     </p>
                 </div>
             </div>
-
-            <style>{`
-        @media (max-width: 768px) {
-          .grid-footer {
-            grid-template-columns: 1fr 1fr !important;
-            gap: 2rem !important;
-          }
-        }
-        @media (max-width: 480px) {
-          .grid-footer {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
         </footer>
     )
 }

@@ -19,7 +19,7 @@ import {
 } from '@/lib/mockData'
 
 export default function StorePage() {
-    const [darkMode, setDarkMode] = useState(true)
+    const [darkMode, setDarkMode] = useState(false)
     const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
     return (

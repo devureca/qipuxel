@@ -52,10 +52,8 @@ function ReviewRow({
     return (
         <div
             ref={ref}
+            className="review-row"
             style={{
-                display: 'grid',
-                gridTemplateColumns: '260px 1fr',
-                gap: '2rem',
                 padding: '2rem 0',
                 borderBottom: isLast ? 'none' : `1px solid ${borderColor}`,
                 opacity: inView ? 1 : 0,
@@ -63,12 +61,20 @@ function ReviewRow({
                 transition: `all 0.6s ease ${delay}ms`,
             }}
         >
-            {/* Left - avatar + name */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {/* Avatar + nombre */}
+            <div
+                className="review-row-header"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    marginBottom: '1rem',
+                }}
+            >
                 <div
                     style={{
-                        width: 56,
-                        height: 56,
+                        width: 52,
+                        height: 52,
                         borderRadius: '50%',
                         background: primaryColor,
                         display: 'flex',
@@ -76,9 +82,8 @@ function ReviewRow({
                         justifyContent: 'center',
                         flexShrink: 0,
                         fontFamily: 'var(--font-bebas)',
-                        fontSize: '1.4rem',
+                        fontSize: '1.3rem',
                         color: '#fff',
-                        letterSpacing: '0.05em',
                     }}
                 >
                     {review.name.charAt(0).toUpperCase()}
@@ -99,7 +104,7 @@ function ReviewRow({
                 </div>
             </div>
 
-            {/* Right - review text */}
+            {/* Reseña */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 <p
                     style={{
@@ -126,12 +131,33 @@ export default function Reviews({ reviews, darkMode, primaryColor }: ReviewsProp
 
     return (
         <section
+            className="section-padding"
             style={{
-                padding: '80px 5%',
+                padding: '0 5%',
                 background: darkMode ? '#0d0d0d' : '#f7f6f3',
             }}
         >
-            <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+            <style>{`
+        .review-row {
+          display: block;
+        }
+        .review-row-header {
+          margin-bottom: 1rem;
+        }
+        @media (min-width: 768px) {
+          .review-row {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 2rem;
+            align-items: center;
+          }
+          .review-row-header {
+            margin-bottom: 0 !important;
+          }
+        }
+      `}</style>
+
+            <div style={{ maxWidth: 1280, margin: '0 auto', paddingTop: 'clamp(48px, 6vw, 80px)', paddingBottom: 'clamp(48px, 6vw, 80px)' }}>
 
                 {/* Title */}
                 <div
