@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { AuthProvider } from '@/lib/auth'
 import { Bebas_Neue, DM_Sans } from 'next/font/google'
 import './globals.css'
 
@@ -18,15 +19,13 @@ export const metadata: Metadata = {
   description: 'Tu catálogo de videojuegos',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
-      <body className={`${bebasNeue.variable} ${dmSans.variable} font-sans`}>
-        {children}
+    <html lang="es" className={`${bebasNeue.variable} ${dmSans.variable}`}>
+      <body className={dmSans.className}>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )
